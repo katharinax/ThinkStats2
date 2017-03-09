@@ -46,5 +46,33 @@ plt.show()
 np.average(resp["numkdhh"])
 np.average(resp["numkdhh"], weights = resp["numkdhh"])
 
+# Q3. Think Stats Chapter 4 Exercise 2 (random distribution)
+rand = np.random.random(1000)
+weights = np.ones_like(rand)/1000
+plt.clf()
+plt.hist(rand, 
+         bins = 100,
+         histtype = "step",
+         weights = weights,
+         linewidth = 2,
+         label = "PMF")
+plt.hist(rand,
+         bins = 100,
+         histtype = "step",
+         cumulative = True,
+         weights = weights,
+         label = "CDF")
+plt.ylabel("Density")
+plt.title("Uniform distribution\n(n=1000)")
+plt.legend(loc = "upper left")
+plt.show()
+
+
+
+
+
+
+
+
 
 
