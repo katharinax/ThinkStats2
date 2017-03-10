@@ -87,7 +87,8 @@ max_cm = ft_inch_to_cm(6, 1)
 max_cm_z = stdize(max_cm, mu, sigma)   
 sp.stats.norm.cdf(max_cm_z) - sp.stats.norm.cdf(min_cm_z)
 
-
+# Q5. Bayesian (Elvis Presley twin)
+((1/300) * (1/2)) / ((1/300) * (1/2) + (1/125) * (1/4))
 
 
 
