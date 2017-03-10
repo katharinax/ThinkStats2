@@ -8,12 +8,23 @@ Created on Wed Mar  8 17:13:53 2017
 
 import pandas as pd
 import numpy as np
+import scipy as sp
 import matplotlib.pyplot as plt
 import thinkstats2 as ts
 import nsfg
+import brfss
+
+def ft_inch_to_cm(ft, inch):
+    cm = (ft * 12 + inch) * 2.54
+    return cm
+
+def stdize(value, mu, sigma):
+    z = (value - mu) / sigma
+    return z
 
 preg = nsfg.ReadFemPreg()
 resp = nsfg.ReadFemResp()
+bs = brfss.ReadBrfss()
 
 # Q1. Think Stats Chapter 2 Exercise 4 (effect size of Cohen's d)
 live = preg[preg["outcome"] == 1]
@@ -67,7 +78,14 @@ plt.title("Uniform distribution\n(n=1000)")
 plt.legend(loc = "upper left")
 plt.show()
 
-
+# Q4. Think Stats Chapter 5 Exercise 1 (normal distribution of blue men)
+mu = 178
+sigma = 7.7
+min_cm = ft_inch_to_cm(5, 10)
+min_cm_z = stdize(min_cm, mu, sigma)
+max_cm = ft_inch_to_cm(6, 1)
+max_cm_z = stdize(max_cm, mu, sigma)   
+sp.stats.norm.cdf(max_cm_z) - sp.stats.norm.cdf(min_cm_z)
 
 
 
