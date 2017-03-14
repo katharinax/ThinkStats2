@@ -24,6 +24,19 @@ def stdize(value, mu, sigma):
     z = (value - mu) / sigma
     return z
 
+def sim_exp(sim, lambda1, samp_size):
+    L = []
+    for i in range(sim):
+        s10 = np.random.exponential(scale = 1 / lambda1, size = samp_size)
+        L += [1 / s10.mean()]
+    est_L = np.array(L).mean()
+    est_se = np.array(L).std()
+    sorted_L = sorted(L)
+    lower_index = round(0.05 * sim)
+    upper_index = round(0.95 * sim)
+    est_90ci = [sorted_L[lower_index], sorted_L[upper_index]]
+    return (L, est_L, est_se, est_90ci)
+
 preg = nsfg.ReadFemPreg()
 resp = nsfg.ReadFemResp()
 bs = brfss.ReadBrfss()
@@ -163,8 +176,40 @@ plt.show()
 pearson = no_na[["agepreg", "totalwgt_lb"]].corr(method = "pearson")
 spearman = no_na[["agepreg", "totalwgt_lb"]].corr(method = "spearman")
 
+# Q8. Think Stats Chapter 8 Exercise 2 (sampling distribution)
+sim = 1000
+lambda1 = 2
+
+(L, est_L, est_se, est_90ci) = sim_exp(sim, lambda1, samp_size = 10)
+    
+plt.clf()
+plt.hist(L, bins = 50)
+plt.suptitle("Simulated sample distribution of estimated L (lambda)")
+plt.title("population distribution=exponential; lambda=2; sample size=10; simulation size=1000", fontsize = 9)
+plt.xlabel("Estimated L (lambda)")
+plt.ylabel("Frequency")
+plt.show()
+
+est_se = []
+samp_size_iter = range(10, 800, 20)
+for samp_size in samp_size_iter:
+    a = sim_exp(sim, lambda1, samp_size = samp_size)
+    est_se += [a[2]]
+    
+plt.clf()
+plt.plot(list(samp_size_iter), est_se)
+plt.title("Standard error of estimated L versus sample size")
+plt.xlabel("Sample size")
+plt.ylabel("SE of est. L")
+plt.show()   
+
+    
 
 
+
+
+    
+    
 
 
 
