@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 import thinkstats2 as ts
 import nsfg
 import brfss
+import hinc
+import hinc2
 
 def ft_inch_to_cm(ft, inch):
     cm = (ft * 12 + inch) * 2.54
@@ -40,6 +42,8 @@ def sim_exp(sim, lambda1, samp_size):
 preg = nsfg.ReadFemPreg()
 resp = nsfg.ReadFemResp()
 bs = brfss.ReadBrfss()
+income = hinc.ReadData()
+log_intp_income = hinc2.InterpolateSample(income, log_upper=6.0)
 
 # Q1. Think Stats Chapter 2 Exercise 4 (effect size of Cohen's d)
 live = preg[preg["outcome"] == 1]
@@ -203,13 +207,29 @@ plt.xlabel("Sample size")
 plt.ylabel("SE of est. L")
 plt.show()   
 
+# Q9. Think Stats Chapter 6 Exercise 1 (skewness of household income)
+intp_income = 10 ** log_intp_income
+summary = pd.DataFrame(intp_income).describe()
+median = summary.loc["50%"]
+mean = summary.loc["mean"]
+
+## skewness - looking at symmetry
+skew = sp.stats.skew(intp_income) # or ts.Skewness(intp_income)
+
+## Pearson skewness - looking at diff btwn mean and median
+pskew = 3 * (mean - median) / summary.loc["std"] # or ts.PearsonMedianSkewness(intp_income)
+
+len(intp_income[intp_income < float(mean)]) / summary.loc["count"]
     
 
 
 
 
-    
-    
+
+
+
+
+
 
 
 
