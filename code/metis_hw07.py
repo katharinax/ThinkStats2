@@ -39,6 +39,39 @@ def sim_exp(sim, lambda1, samp_size):
     est_90ci = [sorted_L[lower_index], sorted_L[upper_index]]
     return (L, est_L, est_se, est_90ci)
 
+def num_goals(lam):
+    """
+    Input: Goal-scoring rate, lam, in goals per game
+    Goal: Simulates a game by generating the time between goals until the total time exceeds 1 game
+    Output: Number of goals scored
+    """
+    time_lapse = 0
+    goal = 0
+    time_lapse += np.random.exponential(scale = 1 / lam, size = 1)
+    while time_lapse < 1:
+        goal += 1
+        time_lapse += np.random.exponential(scale = 1 / lam, size = 1)
+    return goal
+
+def est_L_with_time(lam, sim):
+    """
+    Input: Goal-scoring rate, lam, in goals per game
+           Number of simulations, sim
+    Goal: Simulates many games and computes estimated L statistics
+    Output: (estimated L's, mean error, RMSE, 90% CI)
+    Note: Use in conjunction with num_goals()
+    """
+    L = []
+    for i in range(sim):
+        L += [num_goals(lam)]
+    meanError = (np.array(L) - lam).mean()
+    RMSE = (((np.array(L) - lam) ** 2).mean()) ** (1/2)
+    sorted_L = sorted(L)
+    lower_index = round(0.05 * sim)
+    upper_index = round(0.95 * sim)
+    est_90ci = [sorted_L[lower_index], sorted_L[upper_index]]
+    return (L, meanError, RMSE, est_90ci)
+
 preg = nsfg.ReadFemPreg()
 resp = nsfg.ReadFemResp()
 bs = brfss.ReadBrfss()
@@ -221,6 +254,34 @@ pskew = 3 * (mean - median) / summary.loc["std"] # or ts.PearsonMedianSkewness(i
 
 len(intp_income[intp_income < float(mean)]) / summary.loc["count"]
     
+# Q10. Think Stats Chapter 8 Exercise 3 (scoring)
+lam = 2
+sim = 10000
+(est_L, meanError, RMSE, est_90ci) = est_L_with_time(lam, sim)
+
+plt.clf()
+plt.hist(est_L, bins = max(est_L) - min(est_L) + 1)
+plt.axvline(x = est_90ci[0], linewidth=2, color='r')
+plt.axvline(x = est_90ci[1], linewidth=2, color='r')
+plt.suptitle("Simulated sample distribution of estimated L (lambda)")
+plt.title("time interval distribution=exponential; lambda="+str(lam)+"; simulation size=10000", fontsize = 9)
+plt.xlabel("Estimated L (lambda)")
+plt.ylabel("Frequency")
+# ci_str = "90% CI ["+str(round(est_90ci[0], 2))+","+str(round(est_90ci[1], 2))+"]"
+# plt.text(0, 10, "mean error "+str(round(meanError, 4))+"\nRMSE "+str(round(RMSE, 4))+"\n"+ci_str+"\nSE "+str(round(np.array(est_L).std(), 4)))
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
