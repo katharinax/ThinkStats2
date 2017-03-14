@@ -17,6 +17,7 @@ import nsfg
 import brfss
 import hinc
 import hinc2
+import hypothesis as h0
 
 def ft_inch_to_cm(ft, inch):
     cm = (ft * 12 + inch) * 2.54
@@ -72,14 +73,25 @@ def est_L_with_time(lam, sim):
     est_90ci = [sorted_L[lower_index], sorted_L[upper_index]]
     return (L, meanError, RMSE, est_90ci)
 
+class DiffMeansResample(h0.DiffMeansPermute):
+    def RunModel (self):
+        """
+        Goal: Use resampling to simulate test data
+        Output: Simulated data
+        """
+        group1 = np.random.choice(self.pool, self.n, replace = True)
+        group2 = np.random.choice(self.pool, self.m, replace = True)
+        data = group1, group2
+        return data
+    
 preg = nsfg.ReadFemPreg()
+live = preg[preg["outcome"] == 1]
 resp = nsfg.ReadFemResp()
 bs = brfss.ReadBrfss()
 income = hinc.ReadData()
 log_intp_income = hinc2.InterpolateSample(income, log_upper=6.0)
 
 # Q1. Think Stats Chapter 2 Exercise 4 (effect size of Cohen's d)
-live = preg[preg["outcome"] == 1]
 first_wt = live.loc[preg["birthord"] == 1, "totalwgt_lb"]
 other_wt = live.loc[preg["birthord"] != 1, "totalwgt_lb"]
 ts.CohenEffectSize(first_wt, other_wt)
@@ -261,38 +273,30 @@ sim = 10000
 
 plt.clf()
 plt.hist(est_L, bins = max(est_L) - min(est_L) + 1)
-plt.axvline(x = est_90ci[0], linewidth=2, color='r')
+plt.axvline(x = est_90ci[0], linewidth=2, color='r', label = "90% CI")
 plt.axvline(x = est_90ci[1], linewidth=2, color='r')
 plt.suptitle("Simulated sample distribution of estimated L (lambda)")
 plt.title("time interval distribution=exponential; lambda="+str(lam)+"; simulation size=10000", fontsize = 9)
 plt.xlabel("Estimated L (lambda)")
 plt.ylabel("Frequency")
+plt.legend()
 # ci_str = "90% CI ["+str(round(est_90ci[0], 2))+","+str(round(est_90ci[1], 2))+"]"
 # plt.text(0, 10, "mean error "+str(round(meanError, 4))+"\nRMSE "+str(round(RMSE, 4))+"\n"+ci_str+"\nSE "+str(round(np.array(est_L).std(), 4)))
 plt.show()
 
+# Q11. Think Stats Chapter 9 Exercise 2 (resampling)
+first_len = live.loc[preg["birthord"] == 1, "prglngth"]
+other_len = live.loc[preg["birthord"] != 1, "prglngth"]
+data = first_len, other_len
+ht_perm = h0.DiffMeansPermute(data)
+pvalue_perm = ht_perm.PValue()
+ht_resamp = DiffMeansResample(data)
+pvalue_resamp = ht_resamp.PValue()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+first_wt = live.loc[preg["birthord"] == 1, "totalwgt_lb"]
+other_wt = live.loc[preg["birthord"] != 1, "totalwgt_lb"]
+data = first_wt, other_wt
+ht_perm = h0.DiffMeansPermute(data)
+pvalue_perm = ht_perm.PValue()
+ht_resamp = DiffMeansResample(data)
+pvalue_resamp = ht_resamp.PValue()
