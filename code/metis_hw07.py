@@ -9,6 +9,8 @@ Created on Wed Mar  8 17:13:53 2017
 import pandas as pd
 import numpy as np
 import scipy as sp
+from scipy import stats
+import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import thinkstats2 as ts
 import nsfg
@@ -89,6 +91,79 @@ sp.stats.norm.cdf(max_cm_z) - sp.stats.norm.cdf(min_cm_z)
 
 # Q5. Bayesian (Elvis Presley twin)
 ((1/300) * (1/2)) / ((1/300) * (1/2) + (1/125) * (1/4))
+
+# Q7. Think Stats Chapter 7 Exercise 1 (correlation of weight vs. age)
+
+## Code by http://markthegraph.blogspot.com/2015/05/using-python-statsmodels-for-ols-linear.html
+no_na = live[["agepreg", "totalwgt_lb"]].dropna()
+x = no_na["agepreg"]
+x2 = sm.add_constant(x)
+x_std = (x - x.mean()) / x.std()
+x2_std = sm.add_constant(x2)
+y = no_na["totalwgt_lb"]
+y_std = (y - y.mean()) / y.std()
+
+fitted = sm.OLS(y, x2).fit()
+slope = fitted.params.loc["agepreg"]
+x_pred = np.linspace(x.min(), x.max(), 50)
+x_pred2 = sm.add_constant(x_pred)
+y_pred = fitted.predict(x_pred2)
+y_hat = fitted.predict(x2)
+
+## CI
+y_err = y - y_hat
+mean_x = x.T[1].mean()
+n = len(x)
+dof = n - fitted.df_model - 1
+t = stats.t.ppf(1-0.025, df=dof)
+s_err = np.sum(np.power(y_err, 2))
+conf = t * np.sqrt((s_err/(n-2))*(1.0/n + (np.power((x_pred-mean_x),2) / ((np.sum(np.power(x_pred,2))) - n*(np.power(mean_x,2))))))
+upper = y_pred + abs(conf)
+lower = y_pred - abs(conf)
+
+## Scatter plot
+plt.clf()
+plt.plot(x,y, 'ko', markersize = 1)
+plt.title("Scatter plot of birth weight versus mother's age")
+plt.xlabel("Mother’s age (y/o)")
+plt.ylabel("Baby birth weight (lb)")
+plt.show()
+
+plt.clf()
+plt.xlim([10, 46])
+plt.ylim([6.8, 7.8])
+plt.plot(x,y, 'ko', label = "Observation", markersize = 1)
+plt.plot(x_pred, y_pred, '-', color='darkorchid', linewidth=2, label = r'Regression line (slope = ' + str(round(slope, 3)) + r')')
+plt.fill_between(x_pred, lower, upper, color='#888888', alpha=0.4)
+ 
+plt.title("Zoom in on scatter plot of birth weight and mother's age\n\
+with regression line and confidence interval")
+plt.xlabel("Mother’s age (y/o)")
+plt.ylabel("Baby birth weight (lb)")
+plt.legend(loc='lower right')
+plt.show()
+
+## Percentiles plot
+no_na.loc[:, "agepreg_bin"] = " <20"
+no_na.loc[(20 <= no_na["agepreg"]) & (no_na["agepreg"] < 25), "agepreg_bin"] = "20-25"
+no_na.loc[(25 <= no_na["agepreg"]) & (no_na["agepreg"] < 30), "agepreg_bin"] = "25-30"
+no_na.loc[(30 <= no_na["agepreg"]) & (no_na["agepreg"] < 35), "agepreg_bin"] = "30-35"
+no_na.loc[(35 <= no_na["agepreg"]) & (no_na["agepreg"] < 40), "agepreg_bin"] = "35-40"
+no_na.loc[40 <= no_na["agepreg"], "agepreg_bin"] = ">=40"
+
+no_na.boxplot(column = "totalwgt_lb", by = "agepreg_bin")
+#plt.ylim([6, 8.5])
+plt.suptitle("")
+plt.title("Boxplot on birth weight by mother's age")
+plt.xlabel("Mother’s age (y/o)")
+plt.ylabel("Baby birth weight (lb)")
+plt.show()
+
+## Corr coef
+pearson = no_na[["agepreg", "totalwgt_lb"]].corr(method = "pearson")
+spearman = no_na[["agepreg", "totalwgt_lb"]].corr(method = "spearman")
+
+
 
 
 
